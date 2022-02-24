@@ -8,11 +8,6 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:text="wow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <TextView
         app:layout_constraintBottom_toTopOf="@id/pwdLayout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
