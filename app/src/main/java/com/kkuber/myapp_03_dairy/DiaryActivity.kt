@@ -12,36 +12,34 @@ import androidx.core.widget.addTextChangedListener
 
 class DiaryActivity : AppCompatActivity() {
 
-    /*
-    private val diaryEditText : EditText by lazy {
+    // 메인 쓰레드 연결하는 Handler
+    private val handler = Handler(Looper.getMainLooper())
+
+    private val diaryEditText: EditText by lazy {
         findViewById<EditText>(R.id.diaryEditText)
     }
-    */
-
-    // 메인(UI) 스레드와 연결하는 Handler
-    private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_diary)
 
-        val diaryEditText = findViewById<EditText>(R.id.diaryEditText)
-        val detailPreferences = getSharedPreferences("diary", Context.MODE_PRIVATE)
+        initDetailEditText()
+    }
 
-        diaryEditText.setText(detailPreferences.getString("detail", ""))
+    private fun initDetailEditText() {
+        val detail = getSharedPreferences("diary", Context.MODE_PRIVATE).getString("detail", "")
+        diaryEditText.setText(detail)
 
         val runnable = Runnable {
-            getSharedPreferences("diary", Context.MODE_PRIVATE).edit {
+            getSharedPreferences("diary", Context.MODE_PRIVATE).edit(true) {
                 putString("detail", diaryEditText.text.toString())
             }
-
-            Log.d("DiaryActivity", "onCreate : SAVE!!!");
         }
 
         diaryEditText.addTextChangedListener {
-            Log.d("DiaryActivity", "onCreate : TextChanged :: $it");
+            Log.d("DiaryActivity", "text Changed :: $it")
             handler.removeCallbacks(runnable)
-            handler.postDelayed(runnable, 500) // 0.5초에 한번씩 runnable 수행
+            handler.postDelayed(runnable, 500)
         }
     }
 }

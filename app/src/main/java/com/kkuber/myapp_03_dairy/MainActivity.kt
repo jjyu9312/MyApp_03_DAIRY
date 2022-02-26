@@ -6,6 +6,7 @@ import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings.System.putString
+import android.util.Log
 import android.widget.NumberPicker
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -14,7 +15,7 @@ import androidx.core.content.edit
 
 class MainActivity : AppCompatActivity() {
 
-    private val numberPicker1 : NumberPicker by lazy {
+    private val firstNumberPicker: NumberPicker by lazy {
         findViewById<NumberPicker>(R.id.numberPicker1)
             .apply {
                 minValue = 0
@@ -22,7 +23,7 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    private val numberPicker2 : NumberPicker by lazy {
+    private val secondNumberPicker: NumberPicker by lazy {
         findViewById<NumberPicker>(R.id.numberPicker2)
             .apply {
                 minValue = 0
@@ -30,7 +31,7 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    private val numberPicker3 : NumberPicker by lazy {
+    private val thirdNumberPicker: NumberPicker by lazy {
         findViewById<NumberPicker>(R.id.numberPicker3)
             .apply {
                 minValue = 0
@@ -38,80 +39,87 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    private val openButton : AppCompatButton by lazy {
+    private val openButton: AppCompatButton by lazy {
         findViewById<AppCompatButton>(R.id.openButton)
     }
 
-    private val changePwdButton : AppCompatButton by lazy {
+    private val changePasswordButton: AppCompatButton by lazy {
         findViewById<AppCompatButton>(R.id.changePwdButton)
     }
 
-    private var changePwdMode = false
+    private var changePasswordMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        numberPicker1
-        numberPicker2
-        numberPicker3
+        initNumberPicker()
+        initOpenButton()
+        initChangePasswordButton()
+    }
 
+    private fun initNumberPicker() {
+        firstNumberPicker
+        secondNumberPicker
+        thirdNumberPicker
+    }
+
+    private fun initOpenButton() {
         openButton.setOnClickListener {
+            val sharedPreferences = getSharedPreferences("password", Context.MODE_PRIVATE)
 
-            if (changePwdMode) {
-                Toast.makeText(this, "비밀번호 변경 중입니다,", Toast.LENGTH_SHORT).show()
+            if (changePasswordMode) {
+                Toast.makeText(this, "비밀번호 변경 모드입니다.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val pwdFromPreferences = getSharedPreferences("password", Context.MODE_PRIVATE)
-            val pwdFromUser = "${numberPicker1.value}${numberPicker2.value}${numberPicker3.value}"
+            val password = "${firstNumberPicker.value}${secondNumberPicker.value}${thirdNumberPicker.value}"
+            Log.d("MainActivity", "initOpenButton : ${firstNumberPicker.value}${secondNumberPicker.value}${thirdNumberPicker.value}");
+            Log.d("MainActivity", "initOpenButton : ${sharedPreferences.all}");
 
-            if (pwdFromPreferences.getString("password", "000").equals(pwdFromUser)) {
-                // 성공
+            if (password == sharedPreferences.getString("password", "000")) {
                 startActivity(Intent(this, DiaryActivity::class.java))
             } else {
-                // 실패
-                showErrorAlertDialog()
-            }
-        }
-
-        changePwdButton.setOnClickListener {
-
-            val pwdFromPreferences = getSharedPreferences("password", Context.MODE_PRIVATE)
-
-            if (changePwdMode) {
-                // 번호를 저장하는 기능
-                pwdFromPreferences.edit(true) {
-                    val pwdFromUser = "${numberPicker1.value}${numberPicker2.value}${numberPicker3.value}"
-                    putString("password", pwdFromUser)
-                }
-
-                changePwdMode = false
-                changePwdButton.setBackgroundColor(Color.BLACK)
-
-            } else {
-                // changePwdMode 활성화 :: 비밀번호가 맞는 지 체크
-                val pwdFromUser = "${numberPicker1.value}${numberPicker2.value}${numberPicker3.value}"
-
-                if (pwdFromPreferences.getString("password", "000").equals(pwdFromUser)) {
-                    // 성공
-                    changePwdMode = true
-                    Toast.makeText(this, "변경할 패스워드로 입력해주세요.", Toast.LENGTH_SHORT).show()
-                    changePwdButton.setBackgroundColor(Color.RED)
-                    // startActivity()
-                } else {
-                    // 실패
-                    showErrorAlertDialog()
-                }
+                showErrorPopup()
             }
         }
     }
 
-    private fun showErrorAlertDialog() {
+    private fun initChangePasswordButton() {
+        val sharedPreferences = getSharedPreferences("password", Context.MODE_PRIVATE)
+
+        changePasswordButton.setOnClickListener {
+            if (changePasswordMode) {
+
+                sharedPreferences.edit {
+                    this.putString("password", "${firstNumberPicker.value}${secondNumberPicker.value}${thirdNumberPicker.value}")
+                    Log.d("MainActivity", "initChangePasswordButton : ${firstNumberPicker.value}${secondNumberPicker.value}${thirdNumberPicker.value}");
+                    commit()
+                }
+
+                changePasswordMode = false
+                changePasswordButton.setBackgroundColor(Color.BLACK)
+            } else {
+                val password = "${firstNumberPicker.value}${secondNumberPicker.value}${thirdNumberPicker.value}"
+
+                if (password != sharedPreferences.getString("password", "000")) {
+                    showErrorPopup()
+                    return@setOnClickListener
+                }
+
+                changePasswordButton.setBackgroundColor(Color.RED)
+                Toast.makeText(this, "변경할 비밀번호를 입력하고 다시 눌러주세요.", Toast.LENGTH_SHORT).show()
+                changePasswordMode = true
+            }
+        }
+    }
+
+
+    private fun showErrorPopup() {
         AlertDialog.Builder(this)
             .setTitle("실패")
             .setMessage("비밀번호가 잘못되었습니다.")
-            .setPositiveButton("확인") { _, _ -> } // 굳이 사용하지 않을 때 _ 로 대체
+            .setPositiveButton("확인") { _, _ -> }
             .create()
             .show()
     }
