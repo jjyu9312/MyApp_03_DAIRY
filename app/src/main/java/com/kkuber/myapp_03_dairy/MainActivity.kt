@@ -1,6 +1,7 @@
 package com.kkuber.myapp_03_dairy
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -57,14 +58,17 @@ class MainActivity : AppCompatActivity() {
 
         openButton.setOnClickListener {
 
-            if (changePwdMode) Toast.makeText(this, "비밀번호 변경 중입니다,", Toast.LENGTH_SHORT).show()
+            if (changePwdMode) {
+                Toast.makeText(this, "비밀번호 변경 중입니다,", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
             val pwdFromPreferences = getSharedPreferences("password", Context.MODE_PRIVATE)
             val pwdFromUser = "${numberPicker1.value}${numberPicker2.value}${numberPicker3.value}"
 
             if (pwdFromPreferences.getString("password", "000").equals(pwdFromUser)) {
                 // 성공
-                // startActivity()
+                startActivity(Intent(this, DiaryActivity::class.java))
             } else {
                 // 실패
                 showErrorAlertDialog()
